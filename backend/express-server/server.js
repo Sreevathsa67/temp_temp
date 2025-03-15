@@ -54,8 +54,37 @@ io.on('connection', (socket) => {
   });
 });
 
+const browserSockets = {};  // userId -> socketId
+const pythonSockets = {};   
+
+app.post('/api/admin/ban', (req, res) => {
+  const { userId } = req.body;
+  if (!userId) {
+    return res.status(400).json({ msg: 'No userId provided.' });
+  }
+
+  // Optionally update DB: await User.findByIdAndUpdate(userId, { banned: true });
+
+  const browserSockId = browserSockets[userId];
+  const pythonSockId = pythonSockets[userId];
+
+  if (browserSockId) {
+    io.to(browserSockId).emit('banUser', { reason: 'Admin triggered ban' });
+  }
+  if (pythonSockId) {
+    io.to(pythonSockId).emit('banUser', { reason: 'Admin triggered ban' });
+  }
+
+  console.log(`User ${userId} banned (if connected)`);
+  return res.json({ msg: `User ${userId} banned successfully.` });
+});
+
+
+
+
 // Start server
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
   console.log(`🚀 Server listening on port ${PORT}`);
 });
+

@@ -1,9 +1,10 @@
 // /backend/express-server/routes/authRoutes.js
-const express = require('express');
+
+const express = require('express');  // Ensure this is declared only once
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const User = require('../models/User');
+const User = require('../models/User');  // Ensure this path is correct
 
 // Register user
 router.post('/register', async (req, res) => {
@@ -58,27 +59,5 @@ router.post('/login', async (req, res) => {
     res.status(500).json({ msg: 'Server error' });
   }
 });
-// In your Node/Express backend (e.g., in routes/authRoutes.js)
-const express = require('express');
-const router = express.Router();
 
-// Example authentication middleware that populates req.user
-const ensureAuthenticated = (req, res, next) => {
-  if (req.isAuthenticated && req.isAuthenticated()) {
-    return next();
-  }
-  res.status(401).json({ error: "Not logged in" });
-};
-
-router.get('/me', ensureAuthenticated, (req, res) => {
-  // Assuming req.user has been set by your authentication middleware
-  res.json({
-    _id: req.user._id,
-    email: req.user.email,
-    // ... any other fields you need
-  });
-});
-
-module.exports = router;
-
-module.exports = router;
+module.exports = router;  // Ensure module.exports is used only once
