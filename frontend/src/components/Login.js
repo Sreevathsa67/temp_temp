@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 
 const Login = () => {
   const [form, setForm] = useState({ email: '', password: '' });
+  const [status, setStatus] = useState('');
   const navigate = useNavigate();
 
   const onChange = (e) => {
@@ -14,42 +15,65 @@ const Login = () => {
     e.preventDefault();
     try {
       const res = await axios.post('http://localhost:5000/api/auth/login', form);
-      // Expect { token, userType, userId }
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('userType', res.data.userType);
       localStorage.setItem('userId', res.data.userId);
 
+      setStatus('Login successful');
+      
       if (res.data.userType === 'admin') {
-        navigate('/admin');
+        setTimeout(() => navigate('/admin'), 1000);
       } else {
-        navigate('/student');
+        setTimeout(() => navigate('/student'), 1000);
       }
     } catch (err) {
-      alert('Login failed');
+      setStatus('Login failed');
       console.error(err);
     }
   };
 
   return (
-    <div>
-      <h2>Login</h2>
-      <form onSubmit={onSubmit}>
-        <input
-          type="email"
-          placeholder="Email"
-          name="email"
-          value={form.email}
-          onChange={onChange}
-        /><br />
-        <input
-          type="password"
-          placeholder="Password"
-          name="password"
-          value={form.password}
-          onChange={onChange}
-        /><br />
-        <button type="submit">Login</button>
-      </form>
+    <div className="container">
+      <div className="form-container">
+        <div className="dashboard-header">
+          <h1>Login</h1>
+          <p>Access your account</p>
+        </div>
+
+        <form onSubmit={onSubmit}>
+          <div className="form-group">
+            <input
+              type="email"
+              placeholder="Email"
+              name="email"
+              value={form.email}
+              onChange={onChange}
+              className="form-control"
+              required
+            />
+          </div>
+          
+          <div className="form-group">
+            <input
+              type="password"
+              placeholder="Password"
+              name="password"
+              value={form.password}
+              onChange={onChange}
+              className="form-control"
+              required
+            />
+          </div>
+
+          <button type="submit" className="btn">Login</button>
+        </form>
+
+        {status && (
+          <div className={`status-message ${status.includes('failed') ? 'status-error' : 'status-success'}`}>
+            {status}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

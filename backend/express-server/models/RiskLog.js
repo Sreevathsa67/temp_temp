@@ -3,9 +3,10 @@ const mongoose = require('mongoose');
 
 const RiskLogSchema = new mongoose.Schema({
   userId: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: String,
     ref: 'User'
   },
+  username:String,
   mouseRisk: Number,
   keyboardRisk: Number,
   appRisk: Number,

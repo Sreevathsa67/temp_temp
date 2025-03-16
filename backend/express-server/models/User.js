@@ -25,7 +25,9 @@ const UserSchema = new mongoose.Schema({
   createdAt: {
     type: Date,
     default: Date.now
-  }
+  },
+  status: { type: String, enum: ['active', 'warned', 'banned'], default: 'active' },
+  warningsCount: { type: Number, default: 0 }
 });
 
 // Hash the password before saving

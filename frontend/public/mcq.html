@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MCQ Exam - Exam Portal</title>
-  <link rel="stylesheet" href="styles.css"/>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <div class="container">
@@ -21,16 +21,14 @@
         </div>
         
         <div class="question-container">
-          <div class="question" id="question-text">[Q1 text here]</div>
-          <div class="options" id="options-container">
-            <!-- Insert MCQ options here dynamically -->
-          </div>
+          <div class="question" id="question-text">Question text will appear here</div>
+          <div class="options" id="options-container"></div>
         </div>
         
         <div class="navigation">
           <button id="prev-btn" class="nav-btn" disabled>Previous</button>
           <button id="next-btn" class="nav-btn">Next</button>
-          <button id="submit-btn" class="nav-btn submit-btn" onclick="submitExam()" style="display: block;">Submit Exam</button>
+          <button id="submit-btn" class="nav-btn submit-btn" style="display: none;">Submit Exam</button>
         </div>
       </div>
     </main>
@@ -40,8 +38,7 @@
     </footer>
   </div>
 
-  <!-- Socket.IO -->
-  <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
+  <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
   <script src="script.js"></script>
 </body>
 </html>

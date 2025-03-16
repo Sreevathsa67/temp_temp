@@ -3,7 +3,8 @@ function redirectToExam(examType) {
     localStorage.setItem('currentExamType', examType);
     window.location.href = `${examType}.html`;
 }
-
+let socket;
+// let hasBeenRedirected = false;
 // MCQ exam data
 const mcqQuestions = [
     {
@@ -187,320 +188,429 @@ const codingQuestions = [
 ];
 
 // Initialization for MCQ exam page
-function initMCQExam() {
-    let currentQuestion = 0;
-    const answers = new Array(mcqQuestions.length).fill(-1);
-    
-    function loadQuestion(index) {
-        const questionElement = document.getElementById('question-text');
-        const optionsContainer = document.getElementById('options-container');
-        const questionCountElement = document.getElementById('question-count');
-        
-        // Update question text and count
-        questionElement.textContent = mcqQuestions[index].question;
-        questionCountElement.textContent = `Question ${index + 1} of ${mcqQuestions.length}`;
-        
-        // Clear previous options
-        optionsContainer.innerHTML = '';
-        
-        // Add options
-        mcqQuestions[index].options.forEach((option, i) => {
-            const optionElement = document.createElement('div');
-            optionElement.className = `option ${answers[index] === i ? 'selected' : ''}`;
-            optionElement.textContent = option;
-            optionElement.onclick = () => {
-                // Remove selected class from all options
-                document.querySelectorAll('.option').forEach(el => {
-                    el.classList.remove('selected');
-                });
-                // Add selected class to clicked option
-                optionElement.classList.add('selected');
-                // Save answer
-                answers[index] = i;
-            };
-            optionsContainer.appendChild(optionElement);
-        });
-        
-        // Update navigation buttons
-        document.getElementById('prev-btn').disabled = index === 0;
-        
-        if (index === mcqQuestions.length - 1) {
-            document.getElementById('next-btn').style.display = 'none';
-            document.getElementById('submit-btn').style.display = 'block';
-        } else {
-            document.getElementById('next-btn').style.display = 'block';
-            document.getElementById('submit-btn').style.display = 'none';
-        }
-    }
-    
-    // Event listeners for navigation
-    document.getElementById('prev-btn').addEventListener('click', () => {
-        if (currentQuestion > 0) {
-            currentQuestion--;
-            loadQuestion(currentQuestion);
-        }
-    });
-    
-    document.getElementById('next-btn').addEventListener('click', () => {
-        if (currentQuestion < mcqQuestions.length - 1) {
-            currentQuestion++;
-            loadQuestion(currentQuestion);
-        }
-    });
-    
-    document.getElementById('submit-btn').addEventListener('click', () => {
-        // Save answers to localStorage
-        localStorage.setItem('mcqAnswers', JSON.stringify(answers));
-        // Redirect to submission page
-        window.location.href = 'submitted.html';
-    });
-    
-    // Initialize timer
-    let timeLeft = 30 * 60; // 30 minutes in seconds
-    const timerElement = document.getElementById('timer');
-    
-    const timerInterval = setInterval(() => {
-        const minutes = Math.floor(timeLeft / 60);
-        const seconds = timeLeft % 60;
-        
-        timerElement.textContent = `${minutes}:${seconds < 10 ? '0' + seconds : seconds}`;
-        
-        if (timeLeft <= 0) {
-            clearInterval(timerInterval);
-            alert('Time is up! Your answers will be submitted.');
-            // Save answers and redirect
-            localStorage.setItem('mcqAnswers', JSON.stringify(answers));
-            window.location.href = 'submitted.html';
-        }
-        
-        timeLeft--;
-    }, 1000);
-    
-    // Load first question
-    loadQuestion(currentQuestion);
-}
+///////////////////////////////////////////////////////////////
+// script.js
+///////////////////////////////////////////////////////////////
 
-// Initialization for Subjective exam page
-function initSubjectiveExam() {
-    let currentQuestion = 0;
-    const answers = new Array(subjectiveQuestions.length).fill('');
-    
-    function loadQuestion(index) {
-        const questionElement = document.getElementById('question-text');
-        const answerTextarea = document.getElementById('answer-textarea');
-        const questionCountElement = document.getElementById('question-count');
-        
-        // Update question text and count
-        questionElement.textContent = subjectiveQuestions[index].question;
-        questionCountElement.textContent = `Question ${index + 1} of ${subjectiveQuestions.length}`;
-        
-        // Load saved answer (if any)
-        answerTextarea.value = answers[index];
-        
-        // Update navigation buttons
-        document.getElementById('prev-btn').disabled = index === 0;
-        
-        if (index === subjectiveQuestions.length - 1) {
-            document.getElementById('next-btn').style.display = 'none';
-            document.getElementById('submit-btn').style.display = 'block';
-        } else {
-            document.getElementById('next-btn').style.display = 'block';
-            document.getElementById('submit-btn').style.display = 'none';
-        }
-    }
-    
-    // Save current answer
-    function saveCurrentAnswer() {
-        const answerTextarea = document.getElementById('answer-textarea');
-        answers[currentQuestion] = answerTextarea.value;
-    }
-    
-    // Event listeners for navigation
-    document.getElementById('prev-btn').addEventListener('click', () => {
-        if (currentQuestion > 0) {
-            saveCurrentAnswer();
-            currentQuestion--;
-            loadQuestion(currentQuestion);
-        }
-    });
-    
-    document.getElementById('next-btn').addEventListener('click', () => {
-        if (currentQuestion < subjectiveQuestions.length - 1) {
-            saveCurrentAnswer();
-            currentQuestion++;
-            loadQuestion(currentQuestion);
-        }
-    });
-    
-    document.getElementById('submit-btn').addEventListener('click', () => {
-        // Save current answer
-        saveCurrentAnswer();
-        // Save all answers to localStorage
-        localStorage.setItem('subjectiveAnswers', JSON.stringify(answers));
-        // Redirect to submission page
-        window.location.href = 'submitted.html';
-    });
-    
-    // Initialize timer
-    let timeLeft = 60 * 60; // 60 minutes in seconds
-    const timerElement = document.getElementById('timer');
-    
-    const timerInterval = setInterval(() => {
-        const minutes = Math.floor(timeLeft / 60);
-        const seconds = timeLeft % 60;
-        
-        timerElement.textContent = `${minutes}:${seconds < 10 ? '0' + seconds : seconds}`;
-        
-        if (timeLeft <= 0) {
-            clearInterval(timerInterval);
-            alert('Time is up! Your answers will be submitted.');
-            // Save answers and redirect
-            saveCurrentAnswer();
-            localStorage.setItem('subjectiveAnswers', JSON.stringify(answers));
-            window.location.href = 'submitted.html';
-        }
-        
-        timeLeft--;
-    }, 1000);
-    
-    // Load first question
-    loadQuestion(currentQuestion);
-}
+///////////////////////////////////////////////////////////////
+// script.js - Consolidated and Clean Version
+///////////////////////////////////////////////////////////////
 
-// Initialization for Coding exam page
-function initCodingExam() {
-    let currentQuestion = 0;
-    const answers = new Array(codingQuestions.length).fill('');
-    
-    function loadQuestion(index) {
-        const questionElement = document.getElementById('question-text');
-        const codeTextarea = document.getElementById('code-area');
-        const questionCountElement = document.getElementById('question-count');
-        
-        // Update question text and count
-        questionElement.textContent = codingQuestions[index].question;
-        questionCountElement.textContent = `Question ${index + 1} of ${codingQuestions.length}`;
-        
-        // Load saved answer or starter code
-        codeTextarea.value = answers[index] || codingQuestions[index].starterCode;
-        
-        // Update navigation buttons
-        document.getElementById('prev-btn').disabled = index === 0;
-        
-        if (index === codingQuestions.length - 1) {
-            document.getElementById('next-btn').style.display = 'none';
-            document.getElementById('submit-btn').style.display = 'block';
-        } else {
-            document.getElementById('next-btn').style.display = 'block';
-            document.getElementById('submit-btn').style.display = 'none';
-        }
-    }
-    
-    // Save current answer
-    function saveCurrentAnswer() {
-        const codeTextarea = document.getElementById('code-area');
-        answers[currentQuestion] = codeTextarea.value;
-    }
-    
-    // Event listeners for navigation
-    document.getElementById('prev-btn').addEventListener('click', () => {
-        if (currentQuestion > 0) {
-            saveCurrentAnswer();
-            currentQuestion--;
-            loadQuestion(currentQuestion);
-        }
-    });
-    
-    document.getElementById('next-btn').addEventListener('click', () => {
-        if (currentQuestion < codingQuestions.length - 1) {
-            saveCurrentAnswer();
-            currentQuestion++;
-            loadQuestion(currentQuestion);
-        }
-    });
-    
-    document.getElementById('submit-btn').addEventListener('click', () => {
-        // Save current answer
-        saveCurrentAnswer();
-        // Save all answers to localStorage
-        localStorage.setItem('codingAnswers', JSON.stringify(answers));
-        // Redirect to submission page
-        window.location.href = 'submitted.html';
-    });
-    
-    // Initialize timer
-    let timeLeft = 90 * 60; // 90 minutes in seconds
-    const timerElement = document.getElementById('timer');
-    
-    const timerInterval = setInterval(() => {
-        const minutes = Math.floor(timeLeft / 60);
-        const seconds = timeLeft % 60;
-        
-        timerElement.textContent = `${minutes}:${seconds < 10 ? '0' + seconds : seconds}`;
-        
-        if (timeLeft <= 0) {
-            clearInterval(timerInterval);
-            alert('Time is up! Your answers will be submitted.');
-            // Save answers and redirect
-            saveCurrentAnswer();
-            localStorage.setItem('codingAnswers', JSON.stringify(answers));
-            window.location.href = 'submitted.html';
-        }
-        
-        timeLeft--;
-    }, 1000);
-    
-    // Load first question
-    loadQuestion(currentQuestion);
-}
+////////////////////////////
+// Full-Screen Functions  //
+////////////////////////////
 
-// Check for the current page and initialize accordingly
-document.addEventListener('DOMContentLoaded', function() {
-    const currentPath = window.location.pathname;
-    
-    if (currentPath.includes('mcq.html')) {
-        initMCQExam();
-    } else if (currentPath.includes('subjective.html')) {
-        initSubjectiveExam();
-    } else if (currentPath.includes('coding.html')) {
-        initCodingExam();
+///////////////////////////////////////////////////////////////
+// script.js
+///////////////////////////////////////////////////////////////
+
+// ===================== Fullscreen + Tab Detection ====================
+document.addEventListener("DOMContentLoaded", () => {
+    // Check if we just redirected due to a ban
+    if (sessionStorage.getItem('redirectedFromBan') === 'true') {
+        console.log("Page loaded after ban redirect - not reconnecting Socket.IO");
+       // Clear the flag
+        return; // Skip Socket.IO connection
     }
+    
+    // Connect to Socket.IO
+    socket = io("http://localhost:5000");
+    
+    const userId = localStorage.getItem("userId");
+    if (!userId) {
+        console.error("❌ No userId found!");
+        return;
+    }
+    
+    // Join with user ID
+    socket.emit("join", { userId });
+    
+    // Handle ban event
+    socket.on("banUser", () => {
+        console.log("🚫 Ban event received!");
+        console.log("Current URL:", window.location.href);
+        console.log("Redirecting to mains.html");
+        
+        if (document.fullscreenElement) {
+            console.log("Exiting fullscreen mode");
+            exitFullScreen();
+        }
+        
+        // Set a flag to prevent reconnection loops
+        sessionStorage.setItem('redirectedFromBan', 'true');
+        
+        // Use absolute path for redirection
+        window.location.href = "/mains.html";
+    });
+    
+    // Handle warning event
+    socket.on("warnUser", () => {
+        console.log("⚠️ Warning event received!");
+        alert("⚠️ Warning: Risk score is high!");
+    });
 });
 
-
-// script.js
-
-document.addEventListener('DOMContentLoaded', () => {
-    // 1) Connect to Socket.IO for ban + examType logic
-    window.socket = io("http://localhost:5000");
+function enterFullScreen() {
+    const docEl = document.documentElement;
+    if (docEl.requestFullscreen) {
+      docEl.requestFullscreen();
+    } else if (docEl.mozRequestFullScreen) {
+      docEl.mozRequestFullScreen();
+    } else if (docEl.webkitRequestFullscreen) {
+      docEl.webkitRequestFullscreen();
+    } else if (docEl.msRequestFullscreen) {
+      docEl.msRequestFullscreen();
+    }
+  }
   
-    // We'll store a userId in localStorage, or just a dummy
-    const userId = localStorage.getItem("userId") || "dummyBrowserUserId";
-    socket.emit("join", { userId, clientType: "browser" });
-  
-    // Listen for ban
-    socket.on("banUser", data => {
-      alert("You have been banned. Redirecting to home page...");
-      stopMonitoring(() => {
+  // Add this to your script.js for testing
+window.triggerBan = function() {
+    if (socket && socket.connected) {
+        console.log("Manually triggering ban event");
+        socket.emit("triggerBan"); // Add this handler on server
+        // Or directly call the handler
+        alert("🚨 You have been banned! Redirecting...");
+        if (document.fullscreenElement) {
+            exitFullScreen();
+        }
         window.location.href = "mains.html";
+        return "Ban event triggered";
+    } else {
+        return "Socket not connected!";
+    }
+};
+  function exitFullScreen() {
+    if (document.exitFullscreen) {
+      document.exitFullscreen();
+    } else if (document.mozCancelFullScreen) {
+      document.mozCancelFullScreen();
+    } else if (document.webkitExitFullscreen) {
+      document.webkitExitFullscreen();
+    } else if (document.msExitFullscreen) {
+      document.msExitFullscreen();
+    }
+  }
+  
+  // If user exits fullscreen OR page is hidden => force end exam
+  function handleFullScreenOrTabChange() {
+    if (!document.fullscreenElement || document.hidden) {
+      alert("You have exited full screen or switched tabs. The exam is now over.");
+      exitFullScreen();
+      window.location.href = "mains.html";
+    }
+  }
+  
+  // ===================== Main Navigation ====================
+  
+  function redirectToExam(examType) {
+    localStorage.setItem('currentExamType', examType);
+    window.location.href = `${examType}.html`; // e.g. mcq.html, coding.html, etc.
+  }
+  
+  // If user manually ends exam
+  function submitExam() {
+    exitFullScreen();
+    window.location.href = 'submitted.html';
+  }
+  
+  // =========== MCQ / Subjective / Coding Data & Functions ==========
+  // (Your question arrays go here: mcqQuestions, subjectiveQuestions, codingQuestions)
+  
+  // *** MCQ Example ***
+  function initMCQExam() {
+    // Force full screen + detect tab switch
+    enterFullScreen();
+    document.addEventListener('fullscreenchange', handleFullScreenOrTabChange);
+    document.addEventListener('visibilitychange', handleFullScreenOrTabChange);
+  
+    let currentQuestion = 0;
+    const answers = new Array(mcqQuestions.length).fill(-1);
+  
+    function loadQuestion(index) {
+      const questionElement = document.getElementById('question-text');
+      const optionsContainer = document.getElementById('options-container');
+      const questionCountElement = document.getElementById('question-count');
+  
+      questionElement.textContent = mcqQuestions[index].question;
+      questionCountElement.textContent = `Question ${index+1} of ${mcqQuestions.length}`;
+      
+      optionsContainer.innerHTML = '';
+      
+      mcqQuestions[index].options.forEach((option, i) => {
+        const optDiv = document.createElement('div');
+        optDiv.className = `option ${answers[index] === i ? 'selected' : ''}`;
+        optDiv.textContent = option;
+        optDiv.onclick = () => {
+          document.querySelectorAll('.option').forEach(el => el.classList.remove('selected'));
+          optDiv.classList.add('selected');
+          answers[index] = i;
+        };
+        optionsContainer.appendChild(optDiv);
       });
+  
+      document.getElementById('prev-btn').disabled = (index === 0);
+  
+      if (index === mcqQuestions.length - 1) {
+        document.getElementById('next-btn').style.display = 'none';
+        document.getElementById('submit-btn').style.display = 'block';
+      } else {
+        document.getElementById('next-btn').style.display = 'block';
+        document.getElementById('submit-btn').style.display = 'none';
+      }
+    }
+  
+    document.getElementById('prev-btn').addEventListener('click', () => {
+      if (currentQuestion > 0) {
+        currentQuestion--;
+        loadQuestion(currentQuestion);
+      }
     });
   
-    // If index.html, auto-handshake with Python
+    document.getElementById('next-btn').addEventListener('click', () => {
+      if (currentQuestion < mcqQuestions.length - 1) {
+        currentQuestion++;
+        loadQuestion(currentQuestion);
+      }
+    });
+  
+    document.getElementById('submit-btn').addEventListener('click', () => {
+      localStorage.setItem('mcqAnswers', JSON.stringify(answers));
+      exitFullScreen();
+      window.location.href = 'submitted.html';
+    });
+  
+    // Timer (30 min)
+    let timeLeft = 30 * 60;
+    const timerElement = document.getElementById('timer');
+    const timerInterval = setInterval(() => {
+      const minutes = Math.floor(timeLeft / 60);
+      const seconds = timeLeft % 60;
+      timerElement.textContent = `${minutes}:${seconds < 10 ? '0'+seconds : seconds}`;
+  
+      if (timeLeft <= 0) {
+        clearInterval(timerInterval);
+        alert("Time is up! Submitting your answers...");
+        exitFullScreen();
+        localStorage.setItem('mcqAnswers', JSON.stringify(answers));
+        window.location.href = 'submitted.html';
+      }
+      timeLeft--;
+    }, 1000);
+  
+    // Load the first question
+    loadQuestion(currentQuestion);
+  }
+  
+  // *** Subjective Example ***
+  function initSubjectiveExam() {
+    enterFullScreen();
+    document.addEventListener('fullscreenchange', handleFullScreenOrTabChange);
+    document.addEventListener('visibilitychange', handleFullScreenOrTabChange);
+  
+    let currentQuestion = 0;
+    const answers = new Array(subjectiveQuestions.length).fill('');
+  
+    function loadQuestion(index) {
+      const questionElement = document.getElementById('question-text');
+      const answerTextarea = document.getElementById('answer-textarea');
+      const questionCountElement = document.getElementById('question-count');
+  
+      questionElement.textContent = subjectiveQuestions[index].question;
+      questionCountElement.textContent = `Question ${index+1} of ${subjectiveQuestions.length}`;
+      answerTextarea.value = answers[index];
+  
+      document.getElementById('prev-btn').disabled = (index === 0);
+  
+      if (index === subjectiveQuestions.length - 1) {
+        document.getElementById('next-btn').style.display = 'none';
+        document.getElementById('submit-btn').style.display = 'block';
+      } else {
+        document.getElementById('next-btn').style.display = 'block';
+        document.getElementById('submit-btn').style.display = 'none';
+      }
+    }
+  
+    function saveCurrentAnswer() {
+      const answerTextarea = document.getElementById('answer-textarea');
+      answers[currentQuestion] = answerTextarea.value;
+    }
+  
+    document.getElementById('prev-btn').addEventListener('click', () => {
+      if (currentQuestion > 0) {
+        saveCurrentAnswer();
+        currentQuestion--;
+        loadQuestion(currentQuestion);
+      }
+    });
+  
+    document.getElementById('next-btn').addEventListener('click', () => {
+      if (currentQuestion < subjectiveQuestions.length - 1) {
+        saveCurrentAnswer();
+        currentQuestion++;
+        loadQuestion(currentQuestion);
+      }
+    });
+  
+    document.getElementById('submit-btn').addEventListener('click', () => {
+      saveCurrentAnswer();
+      localStorage.setItem('subjectiveAnswers', JSON.stringify(answers));
+      exitFullScreen();
+      window.location.href = 'submitted.html';
+    });
+  
+    // Timer (60 min)
+    let timeLeft = 60 * 60;
+    const timerElement = document.getElementById('timer');
+    const timerInterval = setInterval(() => {
+      const minutes = Math.floor(timeLeft / 60);
+      const seconds = timeLeft % 60;
+      timerElement.textContent = `${minutes}:${seconds < 10 ? '0'+seconds : seconds}`;
+  
+      if (timeLeft <= 0) {
+        clearInterval(timerInterval);
+        alert("Time's up! Submitting your answers...");
+        saveCurrentAnswer();
+        exitFullScreen();
+        localStorage.setItem('subjectiveAnswers', JSON.stringify(answers));
+        window.location.href = 'submitted.html';
+      }
+      timeLeft--;
+    }, 1000);
+  
+    loadQuestion(currentQuestion);
+  }
+  
+  // *** Coding Example ***
+  function initCodingExam() {
+    enterFullScreen();
+    document.addEventListener('fullscreenchange', handleFullScreenOrTabChange);
+    document.addEventListener('visibilitychange', handleFullScreenOrTabChange);
+  
+    let currentQuestion = 0;
+    const answers = new Array(codingQuestions.length).fill('');
+  
+    function loadQuestion(index) {
+      const questionElement = document.getElementById('question-text');
+      const codeTextarea = document.getElementById('code-area');
+      const questionCountElement = document.getElementById('question-count');
+  
+      questionElement.textContent = codingQuestions[index].question;
+      questionCountElement.textContent = `Question ${index+1} of ${codingQuestions.length}`;
+      
+      // Load existing or starter code
+      codeTextarea.value = answers[index] || codingQuestions[index].starterCode;
+  
+      document.getElementById('prev-btn').disabled = (index === 0);
+  
+      if (index === codingQuestions.length - 1) {
+        document.getElementById('next-btn').style.display = 'none';
+        document.getElementById('submit-btn').style.display = 'block';
+      } else {
+        document.getElementById('next-btn').style.display = 'block';
+        document.getElementById('submit-btn').style.display = 'none';
+      }
+    }
+  
+    function saveCurrentAnswer() {
+      const codeTextarea = document.getElementById('code-area');
+      answers[currentQuestion] = codeTextarea.value;
+    }
+  
+    document.getElementById('prev-btn').addEventListener('click', () => {
+      if (currentQuestion > 0) {
+        saveCurrentAnswer();
+        currentQuestion--;
+        loadQuestion(currentQuestion);
+      }
+    });
+  
+    document.getElementById('next-btn').addEventListener('click', () => {
+      if (currentQuestion < codingQuestions.length - 1) {
+        saveCurrentAnswer();
+        currentQuestion++;
+        loadQuestion(currentQuestion);
+      }
+    });
+  
+    document.getElementById('submit-btn').addEventListener('click', () => {
+      saveCurrentAnswer();
+      localStorage.setItem('codingAnswers', JSON.stringify(answers));
+      exitFullScreen();
+      window.location.href = 'submitted.html';
+    });
+  
+    // Timer (90 min)
+    let timeLeft = 90 * 60;
+    const timerElement = document.getElementById('timer');
+    const timerInterval = setInterval(() => {
+      const minutes = Math.floor(timeLeft / 60);
+      const seconds = timeLeft % 60;
+      timerElement.textContent = `${minutes}:${seconds < 10 ? '0'+seconds : seconds}`;
+  
+      if (timeLeft <= 0) {
+        clearInterval(timerInterval);
+        alert("Time is up! Submitting your code...");
+        saveCurrentAnswer();
+        exitFullScreen();
+        localStorage.setItem('codingAnswers', JSON.stringify(answers));
+        window.location.href = 'submitted.html';
+      }
+      timeLeft--;
+    }, 1000);
+  
+    loadQuestion(currentQuestion);
+  }
+  
+  // ========== Page-Specific Initialization ==========
+  
+  document.addEventListener('DOMContentLoaded', function() {
+    const currentPath = window.location.pathname.toLowerCase();
+  
+    if (currentPath.includes('mcq.html')) {
+      initMCQExam();
+    } else if (currentPath.includes('subjective.html')) {
+      initSubjectiveExam();
+    } else if (currentPath.includes('coding.html')) {
+      initCodingExam();
+    }
+  });
+  
+  // ========== Socket.IO + Ban + Monitoring ==========
+  
+//   document.addEventListener('DOMContentLoaded', () => {
+//     // Connect to Socket.IO for ban + examType logic
+//     window.socket = io("http://localhost:5000");
+  
+//     const userId = localStorage.getItem("userId") || "dummyBrowserUserId";
+//     socket.emit("join", { userId, clientType: "browser" });
+    
+//     // Listen for ban
+//     socket.on("banUser", data => {
+//       alert("You have been banned. Redirecting to home page...");
+//       stopMonitoring(() => {
+//         exitFullScreen();
+//         window.location.href = "mains.html";
+//       });
+//     });
+  
+
+
+
+    // If mains.html (previously index.html), do handshake
     if (isCurrentPage("mains.html") || window.location.pathname === "/") {
       startHandshake();
     }
-  
-    // If we're on an exam page, emit the exam type
-    if (isCurrentPage("mcq.html")) {
-      socket.emit("setExamType", { examType: "mcq" });
-    } else if (isCurrentPage("subjective.html")) {
-      socket.emit("setExamType", { examType: "subjective" });
-    } else if (isCurrentPage("coding.html")) {
-      socket.emit("setExamType", { examType: "coding" });
-    }
-  
-    // If submitted.html, auto-redirect after 3s, stopping monitoring
+    
+    // If on exam, set exam type
+    // if (isCurrentPage("mcq.html")) {
+    //   socket.emit("setExamType", { examType: "mcq" });
+    // } else if (isCurrentPage("subjective.html")) {
+    //   socket.emit("setExamType", { examType: "subjective" });
+    // } else if (isCurrentPage("coding.html")) {
+    //   socket.emit("setExamType", { examType: "coding" });
+    // }
+    
+    // If submitted, auto-redirect home after 3s
     if (isCurrentPage("submitted.html")) {
       let countdown = 3;
       const cdEl = document.getElementById("countdown");
@@ -515,15 +625,14 @@ document.addEventListener('DOMContentLoaded', () => {
   
       stopMonitoring();
     }
-  });
   
-  // ============= HELPER FUNCTIONS =============
   
+  // Helper to detect page
   function isCurrentPage(filename) {
-    return window.location.pathname.endsWith(filename);
+    return window.location.pathname.toLowerCase().endsWith(filename);
   }
   
-  // Start handshake with Python
+  // Handshake
   function startHandshake() {
     fetch("http://localhost:4567/handshake", { mode: "cors" })
       .then(res => res.json())
@@ -539,7 +648,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
   }
   
-  // Stop monitoring by calling /stopMonitoring
+  // Stop monitoring (calls the Python endpoint)
   function stopMonitoring(cb) {
     fetch("http://localhost:4567/stopMonitoring")
       .then(() => {
@@ -550,21 +659,5 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error("Error stopping monitoring:", err);
         if (cb) cb();
       });
-  }
-  
-  function redirectToExam(examType) {
-    localStorage.setItem("currentExamType", examType);
-    if (examType === 'mcq') {
-      window.location.href = 'mcq.html';
-    } else if (examType === 'subjective') {
-      window.location.href = 'subjective.html';
-    } else if (examType === 'coding') {
-      window.location.href = 'coding.html';
-    }
-  }
-  
-  function submitExam() {
-    // Some final logic for storing answers
-    window.location.href = 'submitted.html';
   }
   
